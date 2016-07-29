@@ -14,6 +14,7 @@ head(rubp)
 
 price<-rubp$RATE
 
+
 mean(price)
 var(price)
 sd(price)
