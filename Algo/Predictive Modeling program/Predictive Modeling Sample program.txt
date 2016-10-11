@@ -1,4 +1,9 @@
-library(quantmod); library(TTR); library(caret);library(corrplot);library(pROC);library(FSelector);
+library(quantmod)
+library(TTR)
+library(caret)
+library(corrplot
+;library(pROC)
+library(FSelector)
 
 ## Use set.seed function to ensure the results are repeatable
 set.seed(5)

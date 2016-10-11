@@ -9,7 +9,11 @@ library(ggplot2)
 # Read the EUR/USD data and use indicators to build the model ###################################################################################
 # Using MACD histogram and Parabolic SAR as indicators
 
-data = read.csv("EURUSD_hour.csv")
+data = read.csv("Algo/Predictive Modeling program/EURUSD_hour.csv")
+library(Quandl)#CLSH/EURSEK_SPT_VOL
+oil.ts <- Quandl("CLSH/EURSEK_SPT_VOL", trim_start="2016-01-01", trim_end="2016-02-01", type="zoo")
+
+
 data = data[,c(2:7)]
 colnames(data) = c("Date","Time","Open","Low","High","Close")
 

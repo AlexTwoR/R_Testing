@@ -9,8 +9,8 @@ library(FSelector)
 set.seed(5)
 
 ## Read the stock and index data
-df_stock = read.csv("BAJAJ-AUTO 5 Yr data.csv")
-df_index = read.csv("NIFTY 5 Yr data.csv")
+df_stock = read.csv("Algo/Predictive Modeling program/BAJAJ-AUTO 5 Yr data.csv")
+df_index = read.csv("Algo/Predictive Modeling program/NIFTY 5 Yr data.csv")
 
 ## Compute the price change for the stock and classify as UP/DOWN
 price = df_stock$Last-df_stock$Open
