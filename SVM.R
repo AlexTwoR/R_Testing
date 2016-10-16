@@ -25,7 +25,7 @@ summary(tune.out)
 bestmod=tune.out$best.model
 
 
-# Машина опорных векторов
+# пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 set.seed(1)
 
 x=matrix(rnorm(200*2), ncol=2)

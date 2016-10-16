@@ -16,7 +16,7 @@ adf.test(oil.tsm, alternative=c('stationary'))
 
 adf.test(diff(oil.tsm), alternative=c('stationary'))
 
-#Метод Бокса-Кокса
+#пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ
 L <- BoxCox.lambda(ts(oil.ts, frequency=260), method="loglik")
 Lw <- BoxCox.lambda(ts(oil.tsw, frequency=52), method="loglik")
 Lm <- BoxCox.lambda(oil.tsm, method="loglik")

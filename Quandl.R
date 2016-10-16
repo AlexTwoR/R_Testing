@@ -6,7 +6,8 @@ library(Quandl)
 Quandl.api_key("7d26x_bmdjAWyobrqCmD")
 
 rubp = Quandl("CUR/RUB", start_date="2015-01-01")
-
+library(Quandl)#CLSH/EURSEK_SPT_VOL
+oil.ts <- Quandl("CLSH/EURSEK_SPT_VOL", trim_start="2016-01-01", trim_end="2016-02-01", type="zoo")
 
 plot(rubp, type="l")
 
@@ -65,3 +66,14 @@ lines(VaR, col="red")
 
 VaR
 L
+
+
+
+
+
+
+library(qmao)
+
+getQuote("SPY", src="google")
+
+
