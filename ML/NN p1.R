@@ -53,9 +53,7 @@ MSE.nn <- sum((test.r - pr.nn_)^2)/nrow(test_)
 print(paste(MSE.lm,MSE.nn))
 
 
-
-
-
+#Plot
 par(mfrow=c(1,2))
 
 plot(test$medv,pr.nn_,col='red',main='Real vs predicted NN',pch=18,cex=0.7)
