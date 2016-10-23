@@ -1,6 +1,7 @@
 data<- c( 0.0012, 0.0042, 0.0008, 
           0.0042, 0.0165, 0.0111, 
           0.0008, 0.0111, 0.1010,
+          
           0.0045, 0.0362, 0.0108, 
           0.0042, 0.0165, 0.0111, 
           0.0008, 0.0011, 0.1010,
@@ -29,14 +30,25 @@ persp(dat)
 pairs(dat)
 
 
+a<-c(1:4)
+b<-c(3:6)
+
+b %in% a
+a
+b
+
+library(?corrplot) 
+
+corrplot(dat)
+
+
+
+head(dat)
 
 
 
 
 library(FKF)
-
-
-
 
 y <- Nile
 y[c(3:4, 10)] <- NA  # NA values can be handled
