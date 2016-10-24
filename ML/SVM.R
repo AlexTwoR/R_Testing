@@ -49,3 +49,5 @@ set.seed(1)
 tune.out=tune(svm, y~., data=dat[train,], kernel="radial", ranges=list(cost=c(0.1,1,10,100,1000),gamma=c(0.5,1,2,3,4)))
 summary(tune.out)
 table(true=dat[-train,"y"], pred=predict(tune.out$best.model,newdata=dat[-train,]))
+
+

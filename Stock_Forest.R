@@ -107,6 +107,6 @@ tree.pred=predict(tree.carseats,Carseats.test,type="class")
 table(tree.pred,High.test)
 
 
-
+??forecast
 
 

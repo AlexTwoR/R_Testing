@@ -83,7 +83,7 @@ length(pred[pred==dat[-ixTrain,6]])/length(pred)
 
 
 set.seed(1)
-tune.out=tune(svm, y~., data=dat[ixTrain,], kernel="polynomial", ranges=list(cost=c(0.1,1,10, 50),gamma=c(0.1,0.5)))
+tune.out=tune(svm, y~., data=dat[ixTrain,], kernel="polynomial", ranges=list(cost=c(0.1,1,10),gamma=c(0.1,0.5, 1, 10)))
 summary(tune.out)
 
 
@@ -92,3 +92,30 @@ pred=predict(tune.out$best.model,newdata=dat[-ixTrain,])
 table(pred,dat[-ixTrain,6])
 
 length(pred[pred==dat[-ixTrain,6]])/length(pred)
+
+#=========== NN =========== 
+
+apply(dat,2,function(x) sum(is.na(x)))
+
+#normalize 
+maxs <- apply(dat[,1:(length(dat)-1)], 2, max) 
+mins <- apply(dat[,1:(length(dat)-1)], 2, min)
+
+class(tt)
+
+
+scaled <- as.data.frame(scale(dat[,1:(length(dat)-1)], center = mins, scale = maxs - mins))
+scaled <- data.frame(scaled,y=dat[,(length(dat))])
+
+ixTrain <- sample(1:nrow(dat),round(0.75*nrow(dat)))
+train_ <- scaled[ixTrain,]
+test_ <- scaled[-ixTrain,]
+
+
+
+library(neuralnet)
+n <- names(train_)
+
+#bilding formula as "medv~ x1+x2..."
+f <- as.formula(paste("y ~", paste(n[!n %in% "y"], collapse = " + ")))
+nn <- neuralnet(f,data=train_,hidden=c(4,3),linear.output=T)
