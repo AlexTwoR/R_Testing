@@ -10,7 +10,8 @@ List bbands(
     int n,           // bbands period
     double k,        // bbands number of standard deviations
     int timeFrame,   // candle priod in seconds
-    double latency   // round trip latency in seconds
+    double latency,   // round trip latency in seconds
+    bool fast = false // return summary only
 ) {
   
   // define strategy states
@@ -87,6 +88,8 @@ List bbands(
   
   // run back test on tick data
   bt.Feed( ticks );
+  
+  if( fast ) return bt.GetSummary();
   
   // combine candles and indicators history
   DataFrame indicators = ListBuilder()

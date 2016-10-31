@@ -6,13 +6,13 @@ ticks
 Rcpp::sourceCpp( 'bbands.cpp' )
 
 timeframe = 60 # seconds
-n = 100
-k = 0.5
+n = 10
+k = 3.3
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
 system.time( { x = bbands( ticks, n, k, timeframe, latency ) } )
 
-x = bbands( ticks[ time %bw% '2016-09-08' ], n, k, timeframe, latency )
+x = bbands( ticks[ time %bw% '2016-09' ], n, k, timeframe, latency )
 x
 
 
@@ -21,7 +21,7 @@ x
 x$trades = x$trades[ state == 'closed' ]
 x$orders = x$orders[ state == 'executed' ]
 
-interval = '2016-09-08'
+interval = '2016-09'
 
 layout( matrix( 1:2, ncol = 1 ), height = c( 2, 1 ) )
 
@@ -41,3 +41,30 @@ pnl = x$trades[ time_exit %bw% interval, .( time_exit, pnl = cumsum( pnl_rel ), 
 par( xaxt = 's', mar = c( 4, 4, 0, 4 ) )
 plot_ts( x$indicators[ time %bw% interval ], type = 'n', ylim = pnl[, range( 0, pnl, dd ) ] )
 plot_ts( pnl, lwd = 1, type = 's', legend = 'bottomleft', add = T )
+
+
+
+
+
+
+# create parameters combinations
+parameters = CJ(
+  latency      = 0:1 * 1,
+  timeframe    = c(1, 2, 5) * 60,
+  n = seq(10,160,10),
+  k = seq(2,4,0.1)
+)
+
+parameters
+
+system.time({
+  tests = parameters[, bbands( ticks, n, k, timeframe, latency, fast = T),
+                     by = .( test_id = (1:nrow( parameters )) )]
+})
+
+# preview tests result
+tests
+
+dev.new(width=5, height=4)
+
+multi_heatmap( cbind( parameters, tests ), names( parameters ), 'pnl' ) 
