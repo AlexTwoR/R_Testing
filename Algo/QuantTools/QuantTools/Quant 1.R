@@ -65,6 +65,6 @@ system.time({
 # preview tests result
 tests
 
-dev.new(width=5, height=4)
+dev.new(width=6, height=4)
 
-multi_heatmap( cbind( parameters, tests ), names( parameters ), 'pnl' ) 
+multi_heatmap( cbind( parameters, tests ), names( parameters ), 'n' ) 

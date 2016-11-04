@@ -118,4 +118,13 @@ n <- names(train_)
 
 #bilding formula as "medv~ x1+x2..."
 f <- as.formula(paste("y ~", paste(n[!n %in% "y"], collapse = " + ")))
-nn <- neuralnet(f,data=train_,hidden=c(4,3),linear.output=T)
+nn <- neuralnet(f,data=coredata(train_),hidden=c(4,3),linear.output=T)
+
+r <- neuralnet( 
+  y ~ AAPL.Close, 
+  data=train_, hidden=10, threshold=0.01
+)
+
+
+library(forecast)
+

@@ -67,6 +67,7 @@
         state = ProcessingState::LONG;
         
       }
+      
       // same as above
       if( crossover.IsBelow() and state != ProcessingState::SHORT ) {
         

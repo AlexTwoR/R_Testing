@@ -22,6 +22,9 @@ List rsi(
   
   // initialize indicators
   Rsi rsi( n );
+  Crossover up_crossover;
+  Crossover down_crossover;
+
   
   // initialize Processor and set trading costs
   Processor bt( timeFrame, latency / 2, latency / 2 );
@@ -35,26 +38,55 @@ List rsi(
     // add values to indicators
     rsi.Add( candle.close );
     
-    // if RSI  not formed yet do nothing
+    // if moving averages not formed yet do nothing
     if( not rsi.IsFormed() ) return;
     
-
-      //if RSI upper Up border - sell
-      if(rsi.GetValue()>up){
-        bt.SendOrder( 
-          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "short", idTrade ) 
-        );
-        state = ProcessingState::SHORT;
-      }
-      
-      //if RSI lower Down border - buy
-      if(rsi.GetValue()<down){
-        bt.SendOrder( 
-          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "long", idTrade ) 
-        );
-        state = ProcessingState::LONG;
-      }
+    // update crossover
+    up_crossover.Add( std::pair< double, double >( rsi.GetValue(), up ) );
+    down_crossover.Add( std::pair< double, double >( rsi.GetValue(), down ) );
     
+    if( down_crossover.IsBelow() and state != ProcessingState::LONG ) {
+      
+      // if strategy has no position then buy
+      if( state == ProcessingState::FLAT ) {
+        bt.SendOrder(
+          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "long", idTrade )
+        );
+      }
+      // if strategy has short position then close short position and open long position
+      if( state == ProcessingState::SHORT ) {
+        bt.SendOrder(
+          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "close short", idTrade++ )
+        );
+        bt.SendOrder(
+          new Order( OrderSide::BUY, OrderType::MARKET, NA_REAL, "reverse short", idTrade )
+        );
+      }
+      // set state to long
+      state = ProcessingState::LONG;
+      
+    }
+    
+    
+    if( up_crossover.IsAbove() and state != ProcessingState::SHORT ) {
+      
+      if( state == ProcessingState::FLAT ) {
+        bt.SendOrder(
+          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "short", idTrade )
+        );
+      }
+      if( state == ProcessingState::LONG ) {
+        bt.SendOrder(
+          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "close long", idTrade++ )
+        );
+        bt.SendOrder(
+          new Order( OrderSide::SELL, OrderType::MARKET, NA_REAL, "reverse long", idTrade )
+        );
+      }
+      state = ProcessingState::SHORT;
+      
+    }
+
     
   };
 
