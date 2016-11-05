@@ -32,6 +32,8 @@ List rsi(
   cost.tradeAbs = -0.01;
   bt.SetCost( cost );
   
+
+  
   // define what to do when new candle is formed
   bt.onCandle = [&]( Candle candle ) {
     
@@ -64,6 +66,7 @@ List rsi(
       }
       // set state to long
       state = ProcessingState::LONG;
+
       
     }
     
@@ -84,7 +87,7 @@ List rsi(
         );
       }
       state = ProcessingState::SHORT;
-      
+
     }
 
     

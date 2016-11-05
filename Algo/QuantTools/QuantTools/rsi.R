@@ -2,23 +2,25 @@ library( QuantTools )
 # load ticks data set
 data( ticks )
 ticks
+class(ticks)
+typeof(ticks)
+str(ticks)
+
+Rcpp::sourceCpp('strategy/rsi.cpp' )
 
 
-Rcpp::sourceCpp( 'strategy/rsi.cpp' )
-
-
-timeframe = 10 # seconds
-n = 30
-up = 60.0
+timeframe = 1 # seconds
+n = 14
+up = 70.0
 down = 30.0
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
 system.time( { x = rsi(ticks , n, up, down, timeframe, latency) } )
 x$summary
 
-x = rsi( ticks[ time %bw% '2016' ], n, up, down, timeframe, latency )
-x
+x = rsi( ticks[ time %bw% '2016-09' ], n, up, down, timeframe, latency )
 
+x$summary
 
 # leave only closed trades and executed orders
 x$trades = x$trades[ state == 'closed' ]

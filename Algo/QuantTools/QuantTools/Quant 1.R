@@ -13,6 +13,8 @@ period_short = 90
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
 system.time( { x = sma_crossover( ticks, period_long, period_short, timeframe, latency ) } )
+x$summary
+
 
 x = sma_crossover( ticks[ time %bw% '2016-09-08' ], period_long, period_short, timeframe, latency )
 x
