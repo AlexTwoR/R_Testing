@@ -1,28 +1,27 @@
 library( QuantTools )
 
 #Load Ticks
-ticks_raw<-(read.csv2(file='data/US1.IBM_160101_161031.csv'))
+ticks_raw<-read.csv(file='data/US1.IBM_160101_161031.csv', sep=";")
 
 ticks<-as.data.table(ticks_raw)
 names(ticks)<-c('time1','time2','price', 'volume', 'id')
 
+head(ticks)
+
 #pars time
-ticks$time1<-as.Date(ticks$time1, "%d/%m/%y")
-ticks$time <-as.POSIXct(paste(ticks$time1, ticks$time2))
+ticks$time1 <- as.Date(ticks$time1, "%d/%m/%y")
+ticks$time  <- as.POSIXct(paste(ticks$time1, ticks$time2))
+
 
 ticks$time1 = NULL
 ticks$time2 = NULL
-
-
-head(ticks)
-str(ticks)
 
 class(ticks)
 typeof(ticks)
 str(ticks)
 
 
-Rcpp::sourceCpp('strategy/rsi.cpp' )
+Rcpp::sourceCpp('strategy/rsi.cpp')
 
 
 timeframe = 1 # seconds
@@ -32,10 +31,11 @@ down = 30.0
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
 system.time( { x = rsi(ticks , n, up, down, timeframe, latency) } )
-x$summary
+
 
 x = rsi( ticks[ time %bw% '2016-09' ], n, up, down, timeframe, latency )
-
+plot(x$indicators$close, type='l')
+plot(x$indicators$rsi, type='l')
 x$summary
 
 # leave only closed trades and executed orders
@@ -57,6 +57,8 @@ plot_ts( x$orders[ side == 'sell', .( time_processed, price_exec ) ],
          type = 'p', pch = 25, col = 'firebrick' , legend = 'n', last_values = F, add = T )
 
 plot_ts( x$indicators[ ,.( time, rsi ) ], col = 'firebrick', mar = c( 5.1, 4.1, 0, 2.1 ),  add = F )
+
+rsi(x$indicators$close,14)
 
 
 calc_dd = function( pnl ) { x = pnl; x[ x < 0 ] = 0; pnl - cummax( x ) }

@@ -5,11 +5,11 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-List rsi2( 
-    DataFrame ticks, 
-    int n,            // RSI period
-    double up,        // Up border
-    double down,      // Down border
+List stochastic(
+    DataFrame ticks,
+    int n,        // n of indicator
+    int nFast,    // fast smooth
+    int nSlow,    // slow smooth
     int timeFrame,    // candle priod in seconds
     double latency,   // round trip latency in seconds
     bool fast = false // return summary only
@@ -21,23 +21,9 @@ List rsi2(
   int idTrade = 1;
   
   // initialize indicators
-  //Rsi rsi( n );
-  Crossover up_crossover;
-  Crossover down_crossover;
+  Stochastic<double> stoch(n, nFast, nSlow);
   
-  //EMA for Up/Down changer (RSI)
-  Sma ema_up (n);
-  Sma ema_down (n);
-  
-  //RSI Vars
-  double sumGain = 0;
-  double sumLoss = 0;
-  double prevValue = NAN;
-  double rsi = 0;
-  std::vector< double > history;
-  std::queue< double > window_up;
-  std::queue< double > window_down;
-  
+  Crossover crossover;
   
   // initialize Processor and set trading costs
   Processor bt( timeFrame, latency / 2, latency / 2 );
@@ -47,38 +33,21 @@ List rsi2(
   
   
   
-  //define what to do when new candle is formed
+  // define what to do when new candle is formed
   bt.onCandle = [&]( Candle candle ) {
     
+    // add values to indicators
+    stoch.Add( candle.close );
 
-    //-----RSI---
-    if( std::isnan( prevValue ) ) prevValue = candle.close;
-    double change = candle.close - prevValue;
     
-    sumGain = 0.;
-    sumLoss = 0.;
-    
-    change > 0 ? sumGain = change : sumLoss = -change;
-    
-    ema_up.Add(sumGain);
-    ema_down.Add(sumLoss);
-    
-    // if moving averages not formed yet do nothing
-    if( not ema_up.IsFormed() && not ema_down.IsFormed()) {
-      history.push_back( NA_REAL );
-      return;}
-    
-    //calc RSI
-    rsi = 100. * ema_up.GetValue()/(ema_up.GetValue() + ema_down.GetValue());
-    history.push_back( rsi );
-    
+    // if stoch not formed yet do nothing
+    if( not stoch.IsFormed()  ) return;
     
     // update crossover
-    up_crossover.Add( std::pair< double, double >( rsi, up ) );
-    down_crossover.Add( std::pair< double, double >( rsi, down ) );
+    crossover.Add( std::pair< double, double >( stoch.GetValue().kFast, stoch.GetValue().dSlow ) );
     
-    if( down_crossover.IsBelow() and state != ProcessingState::LONG ) {
-      
+    // if smaLong is above smaLong and current state is not long
+    if( crossover.IsAbove() and state != ProcessingState::LONG ) {
       // if strategy has no position then buy
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -97,11 +66,10 @@ List rsi2(
       // set state to long
       state = ProcessingState::LONG;
       
-      
     }
     
-    
-    if( up_crossover.IsAbove() and state != ProcessingState::SHORT ) {
+    // same as above
+    if( crossover.IsBelow() and state != ProcessingState::SHORT ) {
       
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -123,7 +91,6 @@ List rsi2(
     
   };
   
-  
   // run back test on tick data
   bt.Feed( ticks );
   
@@ -132,7 +99,8 @@ List rsi2(
   // combine candles and indicators history
   DataFrame indicators = ListBuilder()
     .Add( bt.GetCandles() )
-    .Add( "rsi", history );
+    .Add( "stoch_kFast", stoch.GetKFastHistory() )
+    .Add( "stoch_dSlow", stoch.GetDSlowHistory() );
   
   // return back test summary, trades, orders and candles/indicators
   return ListBuilder()

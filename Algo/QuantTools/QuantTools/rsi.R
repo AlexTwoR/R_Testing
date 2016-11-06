@@ -6,19 +6,22 @@ class(ticks)
 typeof(ticks)
 str(ticks)
 
-Rcpp::sourceCpp('strategy/rsi.cpp' )
+Rcpp::sourceCpp('strategy/rsi2.cpp' )
 
 
-timeframe = 1 # seconds
+timeframe = 180 # seconds
 n = 14
 up = 70.0
 down = 30.0
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
 system.time( { x = rsi(ticks , n, up, down, timeframe, latency) } )
+
+nrow(ticks)
+
 x$summary
 
-x = rsi( ticks[ time %bw% '2016-09' ], n, up, down, timeframe, latency )
+x = rsi2( ticks[ time %bw% '2016-09-01' ], n, up, down, timeframe, latency )
 
 x$summary
 
@@ -26,7 +29,7 @@ x$summary
 x$trades = x$trades[ state == 'closed' ]
 x$orders = x$orders[ state == 'executed' ]
 
-interval = '2016'
+interval = '2016-09'
 
 layout( matrix( 1:2, ncol = 1 ), height = c( 2, 1 ) )
 
