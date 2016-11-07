@@ -4,19 +4,20 @@ data( ticks )
 ticks
 
 
-Rcpp::sourceCpp( 'sma_crossover.cpp' )
+Rcpp::sourceCpp( 'strategy/VolUp.cpp' )
 
 
 timeframe = 60 # seconds
-period_long = 170
-period_short = 90
+n = 30
+period_long = 100
+period_short = 20
 latency = 0.1 # 100 milliseconds
 # see how fast back testing done on over 2 millin ticks
-system.time( { x = sma_crossover( ticks, period_long, period_short, timeframe, latency ) } )
+system.time( { x = VolUp( ticks, n, period_long, period_short, timeframe, latency ) } )
 x$summary
 
 
-x = sma_crossover( ticks[ time %bw% '2016' ], period_long, period_short, timeframe, latency )
+x = VolUp( ticks[ time %bw% '2016' ], n, period_long, period_short, timeframe, latency )
 x
 
 
@@ -50,16 +51,17 @@ plot_ts( pnl, lwd = 1, type = 's', legend = 'bottomleft', add = T )
 # create parameters combinations
 parameters = CJ(
   latency      = 0:1 * 1,
-  timeframe    = c( 1, 15, 30, 60 ) * 60,
-  period_long  = 1:20 * 10,
-  period_short = 1:20 * 10
+  n = seq(30,60,10),
+  timeframe    = c( 30, 60 ) * 60,
+  period_long  = seq(50,100,5),
+  period_short = seq(5,50,5)
 )
 # preview parameters
 parameters
 
 
 system.time({
-  tests = parameters[, sma_crossover( ticks, period_long, period_short, timeframe, latency, fast = T ), 
+  tests = parameters[, VolUp( ticks, n, period_long, period_short, timeframe, latency, fast = T ), 
                      by = .( test_id = 1:nrow( parameters ) ) ]
 })
 
@@ -68,4 +70,4 @@ system.time({
 tests
 
 dev.new(width=6, height=4)
-multi_heatmap( cbind( parameters, tests ), names( parameters ), 'max_dd' ) 
+multi_heatmap( cbind( parameters, tests ), names( parameters ), 'pnl' ) 

@@ -5,16 +5,14 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-List stochastic(
+List VolUp(
     DataFrame ticks,
-    int n,        // n of indicator
-    int nFast,    // fast smooth
-    int nSlow,    // slow smooth
+    int volPeriod,   // Vol n
+    int longPeriod,   // long sma n
+    int shortPeriod,  // short sma n
     int timeFrame,    // candle priod in seconds
     double latency,   // round trip latency in seconds
-    bool fast = false, // return summary only
-    double up = 70.0,
-    double down = 30.0
+    bool fast = false // return summary only
 ) {
   
   // define strategy states
@@ -23,8 +21,9 @@ List stochastic(
   int idTrade = 1;
   
   // initialize indicators
-  Stochastic<double> stoch(n, nFast, nSlow);
-  
+  Sma smaLong( longPeriod );
+  Sma smaShort( shortPeriod );
+  Sma smaVol( volPeriod );
   Crossover crossover;
   
   // initialize Processor and set trading costs
@@ -39,17 +38,18 @@ List stochastic(
   bt.onCandle = [&]( Candle candle ) {
     
     // add values to indicators
-    stoch.Add( candle.close );
-
+    smaLong.Add(candle.close);
+    smaShort.Add(candle.close);
+    smaVol.Add(candle.volume);
     
-    // if stoch not formed yet do nothing
-    if( not stoch.IsFormed()  ) return;
+    // if moving averages not formed yet do nothing
+    if( not smaLong.IsFormed() or not smaShort.IsFormed() ) return;
     
     // update crossover
-    crossover.Add( std::pair< double, double >( stoch.GetValue().kFast, stoch.GetValue().dSlow ) );
+    crossover.Add( std::pair< double, double >( smaShort.GetValue(), smaLong.GetValue() ) );
     
     // if smaLong is above smaLong and current state is not long
-    if( crossover.IsAbove() and state != ProcessingState::LONG and stoch.GetValue().kFast<30) {
+    if( candle.volume>smaVol.GetValue() and crossover.IsAbove() and state != ProcessingState::LONG ) {
       // if strategy has no position then buy
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -71,7 +71,7 @@ List stochastic(
     }
     
     // same as above
-    if( crossover.IsBelow() and state != ProcessingState::SHORT and stoch.GetValue().kFast>70) {
+    if( crossover.IsBelow() and state != ProcessingState::SHORT ) {
       
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -101,8 +101,8 @@ List stochastic(
   // combine candles and indicators history
   DataFrame indicators = ListBuilder()
     .Add( bt.GetCandles() )
-    .Add( "stoch_kFast", stoch.GetKFastHistory() )
-    .Add( "stoch_dSlow", stoch.GetDSlowHistory() );
+    .Add( "sma_long", smaLong .GetHistory() )
+    .Add( "sma_short", smaShort.GetHistory() );
   
   // return back test summary, trades, orders and candles/indicators
   return ListBuilder()
