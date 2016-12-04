@@ -32,7 +32,6 @@
     bt.SetCost( cost );
     
     
-    
     // define what to do when new candle is formed
     bt.onCandle = [&]( Candle candle ) {
       

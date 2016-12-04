@@ -7,8 +7,8 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 List VolUp(
     DataFrame ticks,
-    int volPeriod,   // Vol n
-    int longPeriod,   // long sma n
+    int n,   // Vol n
+    int k,   // long sma n
     int shortPeriod,  // short sma n
     int timeFrame,    // candle priod in seconds
     double latency,   // round trip latency in seconds
@@ -21,9 +21,9 @@ List VolUp(
   int idTrade = 1;
   
   // initialize indicators
-  Sma smaLong( longPeriod );
-  Sma smaShort( shortPeriod );
-  Sma smaVol( volPeriod );
+
+  Ema emaRet(n);
+  RollSd sdRet(n);
   Crossover crossover;
   
   // initialize Processor and set trading costs
@@ -32,24 +32,25 @@ List VolUp(
   cost.tradeAbs = -0.01;
   bt.SetCost( cost );
   
-  
+  double ret = 0;
   
   // define what to do when new candle is formed
   bt.onCandle = [&]( Candle candle ) {
     
-    // add values to indicators
-    smaLong.Add(candle.close);
-    smaShort.Add(candle.close);
-    smaVol.Add(candle.volume);
+    ret = (candle.close-candle.open)/candle.open;
+    emaRet.Add( ret );
     
-    // if moving averages not formed yet do nothing
-    if( not smaLong.IsFormed() or not smaShort.IsFormed() ) return;
+    if( not emaRet.IsFormed() ) {
+      sdRet.Add(0);
+      return;
+      }
+    sdRet.Add( emaRet.GetValue() );
     
-    // update crossover
-    crossover.Add( std::pair< double, double >( smaShort.GetValue(), smaLong.GetValue() ) );
+    if( not sdRet.IsFormed() ) return;
     
+      
     // if smaLong is above smaLong and current state is not long
-    if( candle.volume>smaVol.GetValue() and crossover.IsAbove() and state != ProcessingState::LONG ) {
+    if( emaRet.GetValue() < -k*sdRet.GetValue() && state != ProcessingState::LONG ) {
       // if strategy has no position then buy
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -70,8 +71,8 @@ List VolUp(
       
     }
     
-    // same as above
-    if( crossover.IsBelow() and state != ProcessingState::SHORT ) {
+
+    if( emaRet.GetValue() > k*sdRet.GetValue() and state != ProcessingState::SHORT ) {
       
       if( state == ProcessingState::FLAT ) {
         bt.SendOrder(
@@ -101,8 +102,9 @@ List VolUp(
   // combine candles and indicators history
   DataFrame indicators = ListBuilder()
     .Add( bt.GetCandles() )
-    .Add( "sma_long", smaLong .GetHistory() )
-    .Add( "sma_short", smaShort.GetHistory() );
+    .Add( "sdRet", sdRet.GetHistory() )
+    .Add( "emaRet", emaRet.GetHistory() ); //sdRet
+  
   
   // return back test summary, trades, orders and candles/indicators
   return ListBuilder()
